@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title></title>
+<!--    <link href="Content/bootstrap.min.css" rel="stylesheet" />-->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<!--    <script src="jquery-3.5.1.min.js"></script>-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<!--    <script src="Scripts/jquery-3.1.1.min.js"></script>-->
+    <style>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+        }
+
+        #home, #time, #vistor {
+            display: inline-block;
+            overflow: hidden;
+        }
+
+        #home, #vistor {
+            width: 36%;
+            max-width: 36%;
+        }
+
+        #time {
+            max-width: 25%;
+            width: 25%;
+        }
+
+
+        #mapname {
+            position: relative;
+            left: 1.5vw;
+        }
+
+
+        #vistor .score {
+            position: relative;
+            left: 1.12vw;
+        }
+
+        #vistor .controls {
+            float: right;
+            position: relative;
+            left: -3vw;
+        }
+
+        #home .score {
+            position: relative;
+            left: -1.12vw;
+        }
+
+        #home .controls {
+            float: left;
+            position: relative;
+            left: 3vw;
+        }
+
+        #time .controls {
+            float: right;
+            position: relative;
+            /*left: -3vw;*/
+        }
+
+        .name, .score {
+            text-align: center;
+            font-size: 4vw;
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        .score {
+            text-align: center;
+            font-size: 8vw;
+            z-index: -10;
+        }
+
+        #mapname {
+            text-align: center;
+            font-size: 3vw;
+        }
+
+        #timer {
+            text-align: center;
+            position: relative;
+            left: 2.5vw;
+            font-size: 9vw;
+            z-index: -10;
+        }
+
+        .glyphicon {
+            cursor: pointer;
+        }
+
+        .controls {
+            /*display: none;*/
+            visibility: hidden;
+            z-index: 100;
+        }
+
+        .control:hover .controls {
+            /*display: block;*/
+            visibility: visible;
+        }
+        
+        .resetscore, .plusscore, .minusscore, #resettimer, #plus, #minus, #play {
+            font-size: 2.25vw;
+        }
+        [contenteditable] {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+    </style>
+</head>
+<body>
+    <div id="home">
+        <div class="name" contenteditable="true">Home</div>
+
+        <div class="control">
+            <div class="controls">
+                <div class="resetscore"><span class="glyphicon glyphicon-repeat"></span></div>
+                <div class="plusscore"><span class="glyphicon glyphicon-plus-sign"></span></div>
+                <div class="minusscore"><span class="glyphicon glyphicon-minus-sign"></span></div>
+            </div>
+            <div class="score"></div>
+        </div>
+
+    </div>
+
+
+
+
+    <div id="time">
+        <div class="control">
+
+            <div class="controls" style="float:right">
+                <div class="switchsides"><span class="glyphicon glyphicon-repeat"></span></div>
+            </div>
+            <div id="mapname" contenteditable="true">Click to Edit</div>
+        </div>
+
+        <div class="control">
+            <div class="controls" style="float:right">
+                <div id="play"><span class="glyphicon glyphicon-play"></span></div>
+                <div id="resettimer"><span class="glyphicon glyphicon-repeat"></span></div>
+                <div id="plus"><span class="glyphicon glyphicon-plus-sign"></span></div>
+                <div id="minus"><span class="glyphicon glyphicon-minus-sign"></span></div>
+            </div>
+            <div id="timer"></div>
+        </div>
+
+
+    </div>
+
+    <div id="vistor">
+
+        <div class="name" contenteditable="true">Away</div>
+        <div class="control">
+            <div class="controls">
+                <div class="resetscore"><span class="glyphicon glyphicon-repeat"></span></div>
+                <div class="plusscore"><span class="glyphicon glyphicon-plus-sign"></span></div>
+                <div class="minusscore"><span class="glyphicon glyphicon-minus-sign"></span></div>
+            </div>
+            <div class="score"></div>
+        </div>
+    </div>
+    <!--</div>-->
+</body>
+</html>
+<script>
+    if (typeof (EBL) === "undefined") {
+        EBL = {};
+    }
+
+    EBL.Scoreboard = function ($) {
+        "use strict";
+        var _countdown, _distance;
+        var _paused = true;
+        var _homeScore = 0;
+        var _vistorScore = 0;
+        var _minutes = 6;
+        var _seconds = 15;
+        var _direction = 'down';
+        function init() {
+            var showTimer = getParameterByName('showtime') || getParameterByName('showtimer') || getParameterByName('t');
+            var minutes = getParameterByName('minutes') || getParameterByName('mins') || getParameterByName('m');
+            var seconds = getParameterByName('seconds') || getParameterByName('sec') || getParameterByName('s');
+            var direction = getParameterByName('direction') || getParameterByName('dir') || getParameterByName('m');
+            if (direction) {
+                _direction = direction;
+            }
+            if (_direction === 'down') {
+                // Onward default
+                _minutes = 6;
+                _seconds = 15;
+            } else  {
+                _minutes = 45;
+                _seconds = 0;
+            }
+
+            if (isNumber(minutes) || isNumber(seconds)) {
+                _minutes = minutes || 0;
+                _seconds = seconds || 0;
+            }
+
+            if (showTimer == '0' || showTimer == 'false' || showTimer == 'no') {
+                $("#timer").hide();
+            }
+            $("#plus").click(function () {
+                addCountdown(1);
+            });
+            $("#minus").click(function () {
+                addCountdown(-1);
+            });
+            $("#resettimer").click(function () {
+                _countdown = getDuration();
+                _distance = _countdown - getNow();
+            });
+            $(".plusscore").click(function () {
+                var sc = $(this).parent().siblings(".score");
+                var score = sc.html();
+                score = Number(score) + 1;
+
+                //if (score > 5)
+                //    score = 5;
+
+                sc.html(score);
+            });
+            $(".minusscore").click(function () {
+                var sc = $(this).parent().siblings(".score");
+                var score = sc.html();
+                score = Number(score) - 1
+
+                if (score < 0)
+                    score = 0;
+
+                sc.html(score);
+            });
+            $(".resetscore").click(function () {
+                var sc = $(this).parent().siblings(".score");
+                var score = 0;
+                sc.html(score);
+            });
+            $("#play").click(function () {
+                _paused = !_paused;
+                if (_paused) {
+                    $(this).children("span").removeClass("glyphicon-pause");
+                    $(this).children("span").addClass("glyphicon-play");
+                } else {
+                    $(this).children("span").removeClass("glyphicon-play");
+                    $(this).children("span").addClass("glyphicon-pause");
+                }
+            });
+            $(".switchsides").click(function () {
+                var vistor = $("#vistor .name").html();
+                var home = $("#home .name").html();
+                $("#vistor .name").html(home);
+                $("#home .name").html(vistor);
+
+                $("#vistor .score").html("0");
+                $("#home .score").html("0");
+            });
+
+            $("#home .score").html(_homeScore);
+            $("#vistor .score").html(_vistorScore);
+
+
+            if (_direction === 'down') {
+                _countdown = getDuration();
+                _distance = _countdown - getNow();
+            } else {
+                _distance = 0;
+            }
+            updateTimer();
+        }
+        function isNumber(value) {
+            if (value === null)
+                return false;
+            return !isNaN(value);
+        }
+
+
+        function updateTimer() {
+            var now = getNow();
+            if (!_paused) {
+                if (_direction === 'down') {
+                    _distance = _countdown - now;
+                } else {
+                    _distance = now - _countdown;
+                }
+                
+            } else {
+                _countdown = now + _distance;
+            }
+
+            // Time calculations for days, hours, minutes and seconds
+            var days = Math.floor(_distance / (1000 * 60 * 60 * 24));
+            var hours = Math.floor((_distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            var minutes = Math.floor((_distance % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((_distance % (1000 * 60)) / 1000);
+
+            if (minutes >= _minutes && seconds >= _seconds)
+            {
+                minutes = _minutes;
+                seconds = _seconds;
+            }
+                
+
+
+            // Display the result in the element with id="demo"
+            //document.getElementById("timer").innerHTML = days + "d " + hours + "h "
+            //+ minutes + "m " + seconds + "s ";
+            $("#timer").html(minutes + ":" + pad(seconds, 2));
+            // If the count down is finished, write some text
+            if (_direction === 'down') {
+                if (_distance < 0) {
+                    $("#timer").html("0:00");
+                }
+            } 
+            
+            setTimeout(updateTimer, 500);
+        }
+        function getDuration() {
+            return new Date((new Date()).getTime() + _minutes * 60000 + _seconds * 1000 + 999).getTime(); // 999 becuase milliseconds aren't shown
+        }
+        function addCountdown(seconds) {
+            _countdown = (_countdown + seconds * 1000);
+            _distance += (seconds * 1000);
+        }
+        function pad(n, width, z) {
+            z = z || '0';
+            n = n + '';
+            return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+        }
+        function getNow() {
+            return new Date().getTime();
+        }
+
+        function getParameterByName(name, url) {
+            if (!url) url = window.location.href.toLowerCase();
+            name = name.replace(/[\[\]]/g, "\\$&");
+            var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, " "));
+        }
+        /******************** PUBLIC??*****************/
+        return {
+            init: init,
+        };
+    }(jQuery);
+    jQuery(document).ready(EBL.Scoreboard.init);
+
+</script>
